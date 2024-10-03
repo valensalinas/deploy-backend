@@ -25,7 +25,19 @@ const httpServer = app.listen(config.PORT, () => {
 });
 
 const socketServer = new Server(httpServer);
+const messages = [];
 
 socketServer.on('connection', socket => {
     console.log(`Nuevo cliente conectado con id ${socket.id}`);
+
+    socket.on('new_user_data', data => {
+        socket.emit('current_messages', messages);
+        socket.broadcast.emit('new_user', data);
+    });
+
+    socket.on('new_own_msg', data => {
+        messages.push(data);
+        // Reenvía mensaje a TODOS los clientes conectados, INCLUYENDO el que mandó el msj original
+        socketServer.emit('new_general_msg', data);
+    });
 });
